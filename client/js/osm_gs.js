@@ -186,59 +186,128 @@ var vectorLayer = new ol.layer.Vector({
 //add layer to the map
 map.addLayer(vectorLayer);
 
-var interaction;
-$("li button").on("click", function (event) {
-  var buttonId = $(this).attr("id");
+// the code bellow draws shapes and saves the coordinates to drawnFeatures
+var drawnFeatures = new ol.Collection(); // Collection to store drawn features
 
-  console.log(buttonId, "dshgaskdg");
-  // Toggle buttons
-  // Remove previous interaction
-  map.removeInteraction(interaction);
-  switch (event.target.id) {
-    case "select":
-      interaction = new ol.interaction.Select();
-      map.addInteraction(interaction);
-      break;
-    case "point":
-      interaction = new ol.interaction.Draw({
-        type: "Point",
-        source: vectorLayer.getSource(),
-      });
-      map.addInteraction(interaction);
-      break;
-    case "line":
-      interaction = new ol.interaction.Draw({
-        type: "LineString",
-        source: vectorLayer.getSource(),
-      });
-      map.addInteraction(interaction);
-      break;
-    case "polygon":
-      interaction = new ol.interaction.Draw({
-        type: "Polygon",
-        source: vectorLayer.getSource(),
-      });
-      map.addInteraction(interaction);
-      break;
-    case "modify":
-      interaction = new ol.interaction.Modify({
-        features: new ol.Collection(vectorLayer.getSource().getFeatures()),
-      });
-      map.addInteraction(interaction);
-      break;
-      case "position":
-        map.getView().setCenter(geolocation.getPosition());
-        map.getView().setZoom(15);
-        marker.setPosition(geolocation.getPosition());
-        
-        break;
+var interaction;
+
+$("li button").on("click", function (event) {
+    var buttonId = $(this).attr("id");
+
+    console.log(buttonId, "Drawing");
+
+    // Toggle buttons
+    // Remove previous interaction
+    map.removeInteraction(interaction);
+
+    switch (event.target.id) {
+        case "select":
+            interaction = new ol.interaction.Select();
+            map.addInteraction(interaction);
+            break;
+
+        case "point":
+            interaction = new ol.interaction.Draw({
+                type: "Point",
+                source: vectorLayer.getSource(),
+            });
+
+            interaction.on('drawend', function (event) {
+                handleDrawEnd(event, "point");
+            });
+
+            map.addInteraction(interaction);
+            break;
+
+        case "line":
+            interaction = new ol.interaction.Draw({
+                type: "LineString",
+                source: vectorLayer.getSource(),
+            });
+
+            interaction.on('drawend', function (event) {
+                handleDrawEnd(event, "line");
+            });
+
+            map.addInteraction(interaction);
+            break;
+
+        case "polygon":
+            interaction = new ol.interaction.Draw({
+                type: "Polygon",
+                source: vectorLayer.getSource(),
+            });
+
+            interaction.on('drawend', function (event) {
+                handleDrawEnd(event, "polygon");
+            });
+
+            map.addInteraction(interaction);
+            break;
+
+        case "modify":
+            interaction = new ol.interaction.Modify({
+                features: new ol.Collection(vectorLayer.getSource().getFeatures()),
+            });
+            map.addInteraction(interaction);
+            break;
+
+        case "delete-all":
+            // Delete selected features from the vector layer
+            const selectedFeatures = vectorLayer.getSource().getFeatures();
+            for (let i = selectedFeatures.length - 1; i >= 0; i--) {
+                vectorLayer.getSource().removeFeature(selectedFeatures[i]);
+            }
+            break;
+
+        case "position":
+            map.getView().setCenter(geolocation.getPosition());
+            map.getView().setZoom(15);
+            marker.setPosition(geolocation.getPosition());
+            break;
+
         case "global":
-          mapView.setZoom(3);
-          break;
-    default:
-      break;
-  }
+            mapView.setZoom(3);
+            break;
+
+        default:
+            break;
+    }
 });
+//CORRECT THE LAST FUNCTION
+// Enhanced handleDrawEnd function to include region, district, and department
+function handleDrawEnd(event, featureType, region, district, department) {
+    var drawnFeature = event.feature;
+    var geometry = drawnFeature.getGeometry();
+    var format = new ol.format.WKT();
+    var wktGeometry = format.writeGeometry(geometry);
+
+    // Assuming you have region, district, and department information available
+    // Modify this part based on how you obtain these values in your application
+
+    fetch('http://localhost:3200/saveFeature', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            featureType: featureType,
+            geometry: wktGeometry,
+            region: region,
+            district: district,
+            department: department,
+        }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            console.log(`${featureType} feature saved successfully with ID:`, data.id);
+        })
+        .catch((error) => {
+            console.error(`Error saving ${featureType} feature:`, error);
+        });
+}
+
+
 
 map.on("pointermove", function (event) {
   var coord3857 = event.coordinate;
@@ -325,8 +394,7 @@ function parseResponse(data) {
   }
 }
 
-
-
+// this part is used to display the scale 
 var geolocation = new ol.Geolocation({
   projection: map.getView().getProjection(),
   tracking: true,
@@ -336,7 +404,6 @@ var marker = new ol.Overlay({
   positioning: "center-center",
 });
 map.addOverlay(marker);
-
 
 var scaleLineControl = new ol.control.ScaleLine();
 map.addControl(scaleLineControl);
