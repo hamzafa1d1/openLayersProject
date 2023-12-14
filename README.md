@@ -12,7 +12,7 @@ You will need also to run geoserver and complete the work related to the layers.
    ```bash
    npm install
    node service.js
-## PostgreSQL Configuration ⭐
+## PostgresSQL Configuration ⭐
 Ensure that PostgreSQL is running on the same port as specified in the code.
 
 For the PostgreSQL tables, you don't need to worry; the code will handle their creation. Just prepare the database and pass the credentials into the code.
