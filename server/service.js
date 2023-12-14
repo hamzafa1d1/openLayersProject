@@ -8,6 +8,7 @@ const port = 3200;
 
 app.use(cors());
 app.use(bodyParser.json());
+const addFeatureEndpoint = '/saveFeature';
 
 const client = new Client({
     user: 'postgres',
@@ -47,7 +48,8 @@ client.query(setupScript)
         client.end();
     });
 
-app.post('/saveFeature', (req, res) => {
+
+app.post(addFeatureEndpoint, (req, res) => {
     const { featureType, geometry } = req.body;
     const tableName = getTableName(featureType);
 
@@ -59,7 +61,6 @@ app.post('/saveFeature', (req, res) => {
 
     client.query(query, [featureType, geometry])
         .then(result => {
-            console.log(`${featureType} feature saved successfully with ID:`, result.rows[0].id);
             res.status(200).json({ id: result.rows[0].id });
         })
         .catch(err => {

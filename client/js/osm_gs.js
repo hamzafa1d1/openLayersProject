@@ -269,6 +269,8 @@ function setGlobalView() {
 }
 
 
+const nodeServerEndpoint = 'http://localhost:3200/saveFeature';
+const contentType = 'application/json';
 // function that sends the drawn shapes to the server to be saved then to the DB 
 function handleDrawEnd(event, featureType) {
   //featureType: polygon, point, line
@@ -279,10 +281,10 @@ function handleDrawEnd(event, featureType) {
     var format = new ol.format.WKT();
     var wktGeometry = format.writeGeometry(geometry);
 
-    fetch('http://localhost:3200/saveFeature', {
+    fetch(nodeServerEndpoint, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': contentType,
         },
         body: JSON.stringify({
             featureType: featureType,
