@@ -97,7 +97,7 @@ var lyr_Abidjan_HR_ext = new ol.layer.Tile({
   }),
   title: "image",
 });
-//visibilité par défaut des couches au chargement de la carte
+
 
 lyr_landuse.setVisible(true);
 lyr_roads.setVisible(true);
@@ -111,8 +111,8 @@ lyr_osm.setVisible(true);
 point_shapes.setVisible(true);
 line_shapes.setVisible(true);
 polygon_shapes.setVisible(true);
-//déclaration de la liste des couches à afficher dans un ordre précis
-//Definition des popups pour affichage des infos
+
+
 var mapView = new ol.View({
   projection: "EPSG:4326",
   center: [-5.690183, 7.786829],
@@ -222,92 +222,58 @@ var drawnFeatures = new ol.Collection(); // Collection to store drawn features
 
 var interaction;
 
-$("li button").on("click", function (event) {
-    var buttonId = $(this).attr("id");
+$("li button").on("click", function () {
+  var buttonId = $(this).attr("id");
+  console.log(buttonId, "Drawing");
+  map.removeInteraction(interaction);
 
-    console.log(buttonId, "Drawing");
-
-    // Toggle buttons
-    // Remove previous interaction
-    map.removeInteraction(interaction);
-
-    switch (event.target.id) {
-        case "select":
-            interaction = new ol.interaction.Select();
-            map.addInteraction(interaction);
-            break;
-
-        case "point":
-            interaction = new ol.interaction.Draw({
-                type: "Point",
-                source: vectorLayer.getSource(),
-            });
-
-            interaction.on('drawend', function (event) {
-                handleDrawEnd(event, "point");
-            });
-
-            map.addInteraction(interaction);
-            break;
-
-        case "line":
-            interaction = new ol.interaction.Draw({
-                type: "LineString",
-                source: vectorLayer.getSource(),
-            });
-
-            interaction.on('drawend', function (event) {
-                handleDrawEnd(event, "line");
-            });
-
-            map.addInteraction(interaction);
-            break;
-
-        case "polygon":
-            interaction = new ol.interaction.Draw({
-                type: "Polygon",
-                source: vectorLayer.getSource(),
-            });
-
-            interaction.on('drawend', function (event) {
-                handleDrawEnd(event, "polygon");
-            });
-
-            map.addInteraction(interaction);
-            break;
-
-        case "modify":
-            interaction = new ol.interaction.Modify({
-                features: new ol.Collection(vectorLayer.getSource().getFeatures()),
-            });
-            map.addInteraction(interaction);
-            break;
-
-        case "delete-all":
-            // Delete selected features from the vector layer
-            const selectedFeatures = vectorLayer.getSource().getFeatures();
-            for (let i = selectedFeatures.length - 1; i >= 0; i--) {
-                vectorLayer.getSource().removeFeature(selectedFeatures[i]);
-            }
-            break;
-
-        case "position":
-            map.getView().setCenter(geolocation.getPosition());
-            map.getView().setZoom(15);
-            marker.setPosition(geolocation.getPosition());
-            break;
-
-        case "global":
-            mapView.setZoom(3);
-            break;
-
-        default:
-            break;
-    }
+  if (buttonId === "delete-all") {
+      deleteAllFeatures();
+  } else if (buttonId === "position") {
+      centerMapToCurrentPosition();
+  } else if (buttonId === "global") {
+      setGlobalView();
+  } else {
+      handleDrawInteraction(buttonId);
+  }
 });
 
-// Enhanced handleDrawEnd function to include region, district, and department
-function handleDrawEnd(event, featureType, region, district, department) {
+function handleDrawInteraction(drawType) {
+  interaction = new ol.interaction.Draw({
+      type: drawType === "point" ? "Point" : drawType === "line" ? "LineString" : "Polygon",
+      source: vectorLayer.getSource(),
+  });
+
+  interaction.on('drawend', function (event) {
+      handleDrawEnd(event, drawType);
+  });
+
+  map.addInteraction(interaction);
+}
+
+function deleteAllFeatures() {
+  const selectedFeatures = vectorLayer.getSource().getFeatures();
+  for (let i = selectedFeatures.length - 1; i >= 0; i--) {
+      vectorLayer.getSource().removeFeature(selectedFeatures[i]);
+  }
+}
+
+function centerMapToCurrentPosition() {
+  map.getView().setCenter(geolocation.getPosition());
+  map.getView().setZoom(15);
+  marker.setPosition(geolocation.getPosition());
+}
+
+function setGlobalView() {
+  mapView.setZoom(3);
+}
+
+
+// function that sends the drawn shapes to the server to be saved then to the DB 
+function handleDrawEnd(event, featureType) {
+  //featureType: polygon, point, line
+
+  //processing the event data 
     var drawnFeature = event.feature;
     var geometry = drawnFeature.getGeometry();
     var format = new ol.format.WKT();
@@ -321,20 +287,12 @@ function handleDrawEnd(event, featureType, region, district, department) {
         body: JSON.stringify({
             featureType: featureType,
             geometry: wktGeometry,
-            region: region,
-            district: district,
-            department: department,
         }),
     })
-        .then((response) => response.json())
-        .then((data) => {
-            console.log(`${featureType} feature saved successfully with ID:`, data.id);
-        })
         .catch((error) => {
             console.error(`Error saving ${featureType} feature:`, error);
         });
 }
-
 
 
 map.on("pointermove", function (event) {
