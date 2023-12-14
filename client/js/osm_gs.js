@@ -8,6 +8,9 @@ var name_layer_places = "jaouhar-hamza:gis_osm_places_free_1";
 var name_layer_adm1 = "jaouhar-hamza:civ_adm1";
 var name_layer_adm2 = "jaouhar-hamza:civ_adm2";
 var name_layer_adm3 = "jaouhar-hamza:civ_adm3";
+var name_point_shapes = "jaouhar-hamza:point_shapes";
+var name_polygon_shapes = "jaouhar-hamza:polygon_shapes";
+var name_line_shapes = "jaouhar-hamza:line_shapes";
 var name_layer_Abidjan_HR_ext = "jaouhar-hamza:Abidjan_HR_ext";
 //déclaration des couches openlayers
 var lyr_osm = new ol.layer.Tile({
@@ -65,6 +68,28 @@ var lyr_adm3 = new ol.layer.Tile({
   }),
   title: "adm3",
 });
+var point_shapes = new ol.layer.Tile({
+  source: new ol.source.TileWMS({
+    url: url_geoserver,
+    params: { LAYERS: name_point_shapes, TILED: "true" },
+  }),
+  title: "point_shapes",
+});
+var line_shapes = new ol.layer.Tile({
+  source: new ol.source.TileWMS({
+    url: url_geoserver,
+    params: { LAYERS: name_line_shapes, TILED: "true" },
+  }),
+  title: "line_shapes",
+});
+
+var polygon_shapes = new ol.layer.Tile({
+  source: new ol.source.TileWMS({
+    url: url_geoserver,
+    params: { LAYERS: name_polygon_shapes, TILED: "true" },
+  }),
+  title: "polygon_shapes",
+});
 var lyr_Abidjan_HR_ext = new ol.layer.Tile({
   source: new ol.source.TileWMS({
     url: url_geoserver,
@@ -83,6 +108,9 @@ lyr_adm2.setVisible(true);
 lyr_adm3.setVisible(true);
 lyr_Abidjan_HR_ext.setVisible(true);
 lyr_osm.setVisible(true);
+point_shapes.setVisible(true);
+line_shapes.setVisible(true);
+polygon_shapes.setVisible(true);
 //déclaration de la liste des couches à afficher dans un ordre précis
 //Definition des popups pour affichage des infos
 var mapView = new ol.View({
@@ -130,6 +158,9 @@ var layersList = [
   lyr_adm2,
   lyr_adm3,
   lyr_Abidjan_HR_ext,
+  point_shapes,
+  line_shapes,
+  polygon_shapes
 ];
 
 map.setLayerGroup(new ol.layer.Group({ layers: layersList }));
