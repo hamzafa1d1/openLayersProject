@@ -27,3 +27,6 @@ For the PostgreSQL tables, you don't need to worry; the code will handle their c
 
 3. **Displaying the Global View of the Map**
    ![Global View](screenShots/global-view.png)
+
+4. **Displaying the local position**
+   ![Global position](screenShots/my-position.png)
