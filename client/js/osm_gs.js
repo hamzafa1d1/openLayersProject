@@ -305,16 +305,13 @@ $("li button").on("click", function (event) {
             break;
     }
 });
-//CORRECT THE LAST FUNCTION
+
 // Enhanced handleDrawEnd function to include region, district, and department
 function handleDrawEnd(event, featureType, region, district, department) {
     var drawnFeature = event.feature;
     var geometry = drawnFeature.getGeometry();
     var format = new ol.format.WKT();
     var wktGeometry = format.writeGeometry(geometry);
-
-    // Assuming you have region, district, and department information available
-    // Modify this part based on how you obtain these values in your application
 
     fetch('http://localhost:3200/saveFeature', {
         method: 'POST',
